@@ -5,6 +5,7 @@ import { initialBoard, initiallyCanMoveTo } from "../game/InitialPosition";
 import { pieceStateUpdate } from "../game/pieceLogic";
 import MinMax from "../game/MinMax";
 import GameOver from "./GameOver";
+import { PERSIST_STATE_NAMESPACE } from "../const/Constants";
 
 pieceStateUpdate(initialBoard, "W");
 
@@ -15,17 +16,22 @@ const Board: React.FC = () => {
   const [canMoveToHighlighted, setCanMoveToHighlighted] = useState(() => [
     ...initiallyCanMoveTo,
   ]);
+
   const value = localStorage.getItem('chess_genius_player');
+
   let playerName ='';
   if(typeof value === 'string'){
     playerName = JSON.parse(value);
   }
+
   const clickNothing = () => {
     setCanMoveToHighlighted(initiallyCanMoveTo.map((inner) => inner.slice()));
     setPreviousClick([9, 9]);
   };
 
   const [isGameOver, setIsGameOver] = useState(false);
+  let message='';
+
 
   const movePiece = (
     previousBoard: (Piece | any)[][],
@@ -34,10 +40,11 @@ const Board: React.FC = () => {
   ) => {
     // Create a copy of the previous board
     let newBoard = previousBoard.map((inner) => inner.slice());
+    localStorage.setItem(`${PERSIST_STATE_NAMESPACE}_chess`, JSON.stringify(newBoard));
     if (newBoard[i][k] && newBoard[i][k].type === "King") {
       // Game over here
-      alert("Game over");
       console.log("GameOver");
+      message = "Game Over. You Lost"
       setIsGameOver(true);
     }
 
@@ -116,7 +123,13 @@ const Board: React.FC = () => {
         100000
       );
       if (scoreToSend === 100000) {
-        alert("CheckMate! You defeated the AI :)");
+        // alert("CheckMate! You defeated the AI :)");
+        message="CheckMate! You defeated the AI";
+        setIsGameOver(true);
+        return;
+      }
+      if (scoreToSend === -100000){
+        message="CheckMate! You Lost";
         setIsGameOver(true);
         return;
       }
@@ -153,10 +166,11 @@ const Board: React.FC = () => {
   return (
     <>
       {isGameOver ? (
-        <GameOver />
+        <GameOver message={message} />
       ):(
         <div className="flex justify-center items-center w-full h-full bg-landing-bg bg-center bg-cover">
           <section className="sm:w-[600px] sm:h-[600px] xs:w-[450px] xs:h-[450px] xxs:w-[350px] xxs:h-[350px] shadow-lg shadow-black border-8 border-[#8B4513] rounded-sm relative m-auto">
+            
             {board.map((rows: Piece[][] | any, i: number) => (
               <div className="row">
                 {rows.map((col: Piece[], k: number) => (
@@ -172,7 +186,7 @@ const Board: React.FC = () => {
                 ))}
               </div>
             ))}
-            <h4 className="w-full bg-blue p-2 bg-opacity-90 my-4 rounded-b-md text-xl text-center font-merryweather font-extrabold">{playerName || 'Player X'}</h4>
+            <h4 className="w-full bg-blue p-2 bg-opacity-90 my-4 rounded-b-md text-xl text-center font-merryweather font-extrabold">Player: {playerName || 'Player X'}</h4>
           </section>
         </div>
       )}
