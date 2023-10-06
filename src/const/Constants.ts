@@ -1,0 +1,1 @@
+export const PERSIST_STATE_NAMESPACE = "Chess_Game";
